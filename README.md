@@ -61,18 +61,18 @@ GitHub: [github.com/TheMaplePaw/pawhack-team-scuba](https://github.com/TheMapleP
 git clone https://github.com/TheMaplePaw/pawhack-team-scuba
 cd pawhack-team-scuba
 
-# 2. Install dependencies
-npm install
+# 2. go in repo directory
+cd your-website-folder
 
-# 3. Set up environment variables
-cp .env.example .env
+# 3. Set up server
+python -m http.server 8000
 # Fill in your API keys in .env
 
-# 4. Start the dev server
-python -m http.server 8000
+# 4. Go into website
+(http://localhost:8000)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:8000) in your browser.
 
 > **Any required API keys or environment variables:**
 > - `[ENV_VAR_NAME]` — [what it's for and where to get it]
