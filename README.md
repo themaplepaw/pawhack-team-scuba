@@ -22,7 +22,7 @@ GitHub: [github.com/TheMaplePaw/pawhack-team-scuba](https://github.com/TheMapleP
 
 > What pet-market pain point did you tackle? Who feels it, and why does it matter?
 
-[2–3 sentences describing the problem you chose to solve.]
+Every pet owner has been confused on what to do once, finding the right help can be hard
 
 ---
 
@@ -30,7 +30,7 @@ GitHub: [github.com/TheMaplePaw/pawhack-team-scuba](https://github.com/TheMapleP
 
 > What did you build? How does it solve the problem?
 
-[2–3 sentences describing your app and its core value.]
+A website to help collate resources and also a chatbot to help them out
 
 ---
 
