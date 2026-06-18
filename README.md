@@ -1,5 +1,5 @@
 # pawhack-team-scuba
-# [Project Name]
+# PawPair SG
 
 > One sentence: what does this app do and who is it for?
 
@@ -12,9 +12,9 @@ GitHub: [github.com/TheMaplePaw/pawhack-team-scuba](https://github.com/TheMapleP
 
 | Name | Role on the day |
 |------|----------------|
-| [Name 1] | [e.g. Builder / Designer / Pitcher] |
-| [Name 2] | [e.g. Builder / Designer / Pitcher] |
-| [Name 3] | [e.g. Builder / Designer / Pitcher] |
+| Zhen Ye | Builder |
+| Joshua | Pitcher |
+| Geremy | Designer |
 
 ---
 
@@ -46,11 +46,11 @@ GitHub: [github.com/TheMaplePaw/pawhack-team-scuba](https://github.com/TheMapleP
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | [e.g. React / Next.js / plain HTML+JS] |
-| Backend / API | [e.g. Node + Express / Supabase / Firebase] |
-| Database | [e.g. Supabase Postgres / Firebase / none] |
-| AI tools used | [e.g. Claude, v0.dev, Cursor] |
-| Hosting | [e.g. Vercel / Netlify / Render] |
+| Frontend | HTML+JS |
+| Backend / API | Node Claude |
+| Database | Sql |
+| AI tools used | Claude |
+| Hosting | Vercel |
 
 ---
 
@@ -69,7 +69,7 @@ cp .env.example .env
 # Fill in your API keys in .env
 
 # 4. Start the dev server
-npm run dev
+python -m http.server 8000
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
