@@ -1,5 +1,5 @@
 # pawhack-team-scuba
-# [Project Name]
+# PawUnite SG
 
 > One sentence: what does this app do and who is it for?
 
@@ -12,9 +12,9 @@ GitHub: [github.com/TheMaplePaw/pawhack-team-scuba](https://github.com/TheMapleP
 
 | Name | Role on the day |
 |------|----------------|
-| [Name 1] | [e.g. Builder / Designer / Pitcher] |
-| [Name 2] | [e.g. Builder / Designer / Pitcher] |
-| [Name 3] | [e.g. Builder / Designer / Pitcher] |
+| Geremy | Glorious Gay Leader |
+| Joshua | Pitcher |
+| Zhen Ye | Builder |
 
 ---
 
