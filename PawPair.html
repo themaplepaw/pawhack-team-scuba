@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PawPair SG — find your match</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF7EE;
+    --card:#FFFFFF;
+    --mint:#6FC2A6;
+    --mint-deep:#4EA98C;
+    --coral:#FF8E72;
+    --coral-deep:#F4744F;
+    --butter:#FFD56B;
+    --ink:#3B3340;
+    --ink-soft:#7C7280;
+    --line:#F0E4D6;
+    --shadow:0 14px 30px -12px rgba(120,90,70,.30);
+    --shadow-sm:0 6px 16px -8px rgba(120,90,70,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Nunito',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.fred{font-family:'Fredoka',sans-serif;font-weight:600}
+  .wrap{max-width:920px;margin:0 auto;padding:24px 20px 60px}
+
+  /* top bar */
+  .top{display:flex;align-items:center;gap:10px;padding:6px 2px 14px}
+  .logo{font-family:'Fredoka';font-weight:700;font-size:1.4rem;color:var(--ink);display:flex;align-items:center;gap:8px;cursor:pointer}
+  .logo .blob{width:34px;height:34px;border-radius:14px 14px 16px 16px/16px;background:var(--mint);display:grid;place-items:center;font-size:1.1rem;box-shadow:var(--shadow-sm);transform:rotate(-6deg)}
+  .tagpill{margin-left:auto;font-size:.78rem;font-weight:700;color:var(--mint-deep);background:#E7F5EF;padding:6px 12px;border-radius:999px}
+  @media(max-width:560px){.tagpill{display:none}}
+
+  /* tab nav */
+  .nav{display:flex;gap:8px;padding:4px;background:#F4EADE;border-radius:999px;margin-bottom:26px;position:sticky;top:10px;z-index:20;box-shadow:var(--shadow-sm)}
+  .nav button{
+    flex:1;font-family:'Fredoka';font-weight:600;font-size:.98rem;cursor:pointer;border:none;
+    background:transparent;color:var(--ink-soft);padding:11px 8px;border-radius:999px;transition:.18s;
+    display:flex;align-items:center;justify-content:center;gap:6px
+  }
+  .nav button .ne{font-size:1.05rem}
+  .nav button:hover{color:var(--ink)}
+  .nav button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow-sm)}
+  @media(max-width:560px){.nav button span.lbl{font-size:.86rem}}
+
+  /* screens */
+  .screen{display:none;animation:rise .45s cubic-bezier(.2,.8,.2,1)}
+  .screen.active{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  /* hero */
+  .hero{text-align:center;padding:18px 0 8px}
+  .hero h1{font-size:2.5rem;line-height:1.08;letter-spacing:-.5px}
+  .hero h1 .hl{color:var(--coral-deep)}
+  .hero p{color:var(--ink-soft);font-size:1.05rem;max-width:430px;margin:14px auto 0}
+  .paws{font-size:1.6rem;letter-spacing:6px;margin-bottom:6px}
+
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:34px}
+  @media(max-width:560px){.choices{grid-template-columns:1fr}}
+  .choice{
+    background:var(--card);border:2px solid var(--line);border-radius:26px;
+    padding:30px 24px;cursor:pointer;text-align:center;transition:.22s;box-shadow:var(--shadow-sm)
+  }
+  .choice:hover{transform:translateY(-5px) rotate(-.6deg);border-color:var(--mint);box-shadow:var(--shadow)}
+  .choice .ic{font-size:3rem;display:block;margin-bottom:8px}
+  .choice h3{font-size:1.3rem;margin-bottom:4px}
+  .choice p{color:var(--ink-soft);font-size:.92rem}
+  .choice.b:hover{border-color:var(--coral)}
+
+  /* generic button */
+  .btn{
+    font-family:'Fredoka';font-weight:600;font-size:1rem;border:none;cursor:pointer;
+    background:var(--mint);color:#fff;padding:13px 26px;border-radius:999px;transition:.18s;
+    box-shadow:0 8px 18px -8px rgba(78,169,140,.7)
+  }
+  .btn:hover{transform:translateY(-2px);background:var(--mint-deep)}
+  .btn.coral{background:var(--coral);box-shadow:0 8px 18px -8px rgba(244,116,79,.7)}
+  .btn.coral:hover{background:var(--coral-deep)}
+  .btn.ghost{background:transparent;color:var(--ink-soft);box-shadow:none}
+  .btn.ghost:hover{background:#F3EADF;color:var(--ink)}
+  .btn[disabled]{opacity:.4;cursor:not-allowed;transform:none}
+
+  /* quiz */
+  .progress{height:10px;background:#F1E5D7;border-radius:999px;overflow:hidden;margin:6px 0 26px}
+  .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--mint),var(--butter));border-radius:999px;transition:width .35s}
+  .qcard{background:var(--card);border:2px solid var(--line);border-radius:26px;padding:30px 26px;box-shadow:var(--shadow-sm)}
+  .qstep{font-size:.78rem;font-weight:800;color:var(--coral-deep);letter-spacing:1px;text-transform:uppercase}
+  .qcard h2{font-size:1.5rem;margin:6px 0 4px;letter-spacing:-.3px}
+  .qhint{color:var(--ink-soft);font-size:.92rem;margin-bottom:20px}
+  .opts{display:grid;gap:12px}
+  .opts.two{grid-template-columns:1fr 1fr}
+  @media(max-width:520px){.opts.two{grid-template-columns:1fr}}
+  .opt{
+    display:flex;align-items:center;gap:12px;text-align:left;width:100%;
+    background:#FFFDF9;border:2px solid var(--line);border-radius:16px;padding:14px 16px;
+    cursor:pointer;font-family:'Nunito';font-weight:700;font-size:1rem;color:var(--ink);transition:.15s
+  }
+  .opt .em{font-size:1.5rem;line-height:1}
+  .opt small{display:block;font-weight:600;color:var(--ink-soft);font-size:.8rem}
+  .opt:hover{border-color:var(--mint);background:#F4FBF8}
+  .opt.sel{border-color:var(--mint-deep);background:#EAF7F1;box-shadow:inset 0 0 0 1px var(--mint-deep)}
+  .qnav{display:flex;justify-content:space-between;margin-top:24px}
+
+  /* results */
+  .results-head{text-align:center;margin-bottom:22px}
+  .results-head h2{font-size:2rem}
+  .results-head p{color:var(--ink-soft)}
+  .match{
+    background:var(--card);border:2px solid var(--line);border-radius:24px;padding:20px 22px;
+    margin-bottom:16px;box-shadow:var(--shadow-sm);display:flex;gap:18px;align-items:flex-start
+  }
+  .match.top{border-color:var(--mint);box-shadow:var(--shadow)}
+  .match .face{font-size:2.6rem;flex-shrink:0;width:62px;height:62px;border-radius:20px;background:#F4FBF8;display:grid;place-items:center}
+  .match.top .face{background:#E7F5EF}
+  .match h3{font-size:1.25rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .scoretag{font-family:'Fredoka';font-size:.78rem;font-weight:700;color:#fff;background:var(--mint);padding:3px 10px;border-radius:999px}
+  .crown{font-size:.72rem;font-weight:800;color:var(--coral-deep);background:#FFEDE5;padding:3px 9px;border-radius:999px;letter-spacing:.5px}
+  .match p.why{color:var(--ink-soft);font-size:.92rem;margin:6px 0 8px}
+  .flags{display:flex;flex-wrap:wrap;gap:6px}
+  .flag{font-size:.74rem;font-weight:700;padding:4px 10px;border-radius:999px;background:#F3EADF;color:var(--ink-soft)}
+  .flag.good{background:#E7F5EF;color:var(--mint-deep)}
+  .flag.warn{background:#FFF1D6;color:#B5852A}
+  .reslinks{background:#FFFDF9;border:2px dashed var(--line);border-radius:20px;padding:18px 20px;margin-top:8px}
+  .reslinks h4{font-family:'Fredoka';font-size:1.05rem;margin-bottom:6px}
+  .reslinks p{font-size:.86rem;color:var(--ink-soft);margin-bottom:12px}
+  .linkrow{display:flex;flex-wrap:wrap;gap:8px}
+  .linkrow a{font-size:.84rem;font-weight:700;text-decoration:none;color:var(--mint-deep);background:#EAF7F1;padding:8px 13px;border-radius:999px;transition:.15s}
+  .linkrow a:hover{background:var(--mint);color:#fff}
+
+  /* profile form */
+  .form-card{background:var(--card);border:2px solid var(--line);border-radius:26px;padding:28px 26px;box-shadow:var(--shadow-sm)}
+  .field{margin-bottom:18px}
+  .field label{display:block;font-weight:800;font-size:.92rem;margin-bottom:7px}
+  .field input,.field select,.field textarea{
+    width:100%;font-family:'Nunito';font-weight:600;font-size:1rem;color:var(--ink);
+    background:#FFFDF9;border:2px solid var(--line);border-radius:14px;padding:12px 14px;transition:.15s
+  }
+  .field textarea{resize:vertical;min-height:74px}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--mint)}
+  .pet-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  @media(max-width:520px){.pet-pick{grid-template-columns:repeat(3,1fr)}}
+  .pet-pick button{
+    font-family:'Nunito';font-weight:700;font-size:.82rem;cursor:pointer;
+    background:#FFFDF9;border:2px solid var(--line);border-radius:14px;padding:12px 4px;transition:.15s
+  }
+  .pet-pick button .pe{font-size:1.5rem;display:block}
+  .pet-pick button:hover{border-color:var(--coral)}
+  .pet-pick button.sel{border-color:var(--coral-deep);background:#FFF1EC}
+
+  /* form sub-sections + helpers */
+  .fsub{font-family:'Fredoka';font-weight:600;font-size:.8rem;letter-spacing:1.2px;text-transform:uppercase;color:var(--mint-deep);margin:26px 0 14px;display:flex;align-items:center;gap:8px}
+  .fsub::after{content:"";flex:1;height:2px;background:var(--line);border-radius:2px}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:520px){.frow{grid-template-columns:1fr}}
+  .upload{
+    display:flex;align-items:center;gap:12px;background:#FFFDF9;border:2px dashed var(--line);
+    border-radius:14px;padding:12px 14px;cursor:pointer;transition:.15s
+  }
+  .upload:hover{border-color:var(--mint);background:#F4FBF8}
+  .upload .uic{font-size:1.4rem}
+  .upload .utxt{flex:1;min-width:0}
+  .upload .utxt b{font-weight:800;font-size:.9rem;display:block}
+  .upload .utxt small{color:var(--ink-soft);font-size:.78rem}
+  .upload .ustate{font-size:.78rem;font-weight:800;color:var(--mint-deep);white-space:nowrap}
+  .upload input{display:none}
+
+  /* chat */
+  .chat-shell{background:var(--card);border:2px solid var(--line);border-radius:26px;box-shadow:var(--shadow);overflow:hidden}
+  .chat-head{background:linear-gradient(120deg,var(--mint),var(--mint-deep));color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px}
+  .chat-head .av{font-size:1.7rem;width:44px;height:44px;background:rgba(255,255,255,.22);border-radius:14px;display:grid;place-items:center}
+  .chat-head h3{font-size:1.1rem;line-height:1.15}
+  .chat-head small{opacity:.9;font-weight:600;font-size:.8rem}
+  .chat-head .edit{margin-left:auto;font-size:.78rem;font-weight:700;background:rgba(255,255,255,.2);color:#fff;border:none;padding:7px 12px;border-radius:999px;cursor:pointer}
+  .chat-head .edit:hover{background:rgba(255,255,255,.32)}
+  .chat-log{padding:20px;height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;background:#FFFDFA}
+  .bub{max-width:80%;padding:11px 15px;border-radius:18px;font-size:.95rem;font-weight:600;line-height:1.5;white-space:pre-wrap}
+  .bub.ai{align-self:flex-start;background:#EFF7F3;color:var(--ink);border-bottom-left-radius:5px}
+  .bub.me{align-self:flex-end;background:var(--coral);color:#fff;border-bottom-right-radius:5px}
+  .bub.sys{align-self:center;background:#FFF1D6;color:#9a7322;font-size:.8rem;font-weight:700;text-align:center;max-width:90%;border-radius:12px}
+  .typing{align-self:flex-start;display:flex;gap:4px;padding:13px 16px;background:#EFF7F3;border-radius:18px;border-bottom-left-radius:5px}
+  .typing i{width:8px;height:8px;border-radius:50%;background:var(--mint);animation:bob 1s infinite}
+  .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+  @keyframes bob{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+  .chat-in{display:flex;gap:10px;padding:14px;border-top:2px solid var(--line);background:var(--card)}
+  .chat-in input{flex:1;font-family:'Nunito';font-weight:600;font-size:1rem;border:2px solid var(--line);border-radius:999px;padding:11px 18px;background:#FFFDF9}
+  .chat-in input:focus{outline:none;border-color:var(--mint)}
+  .chat-in button{flex-shrink:0;width:46px;height:46px;border-radius:50%;border:none;background:var(--mint);color:#fff;font-size:1.2rem;cursor:pointer;transition:.15s}
+  .chat-in button:hover{background:var(--mint-deep)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 14px;background:var(--card)}
+  .chips button{font-family:'Nunito';font-weight:700;font-size:.8rem;cursor:pointer;background:#F3EADF;border:none;color:var(--ink-soft);padding:7px 13px;border-radius:999px;transition:.15s}
+  .chips button:hover{background:var(--butter);color:var(--ink)}
+
+  .backlink{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink-soft);background:none;border:none;cursor:pointer;font-family:'Nunito';font-size:.9rem;margin-bottom:14px;padding:4px 0}
+  .backlink:hover{color:var(--ink)}
+  .footnote{text-align:center;color:var(--ink-soft);font-size:.78rem;margin-top:26px;line-height:1.6}
+
+  /* tab page headers */
+  .page-head{text-align:center;margin-bottom:8px}
+  .page-head h1{font-size:2rem;letter-spacing:-.4px}
+  .page-head h1 .hl{color:var(--coral-deep)}
+  .page-head p{color:var(--ink-soft);max-width:480px;margin:8px auto 0;font-size:.98rem}
+  .sec-label{font-family:'Fredoka';font-weight:600;font-size:.8rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--mint-deep);margin:30px 0 12px;display:flex;align-items:center;gap:8px}
+  .sec-label::after{content:"";flex:1;height:2px;background:var(--line);border-radius:2px}
+
+  /* emergency banner */
+  .sos{background:linear-gradient(120deg,#FFE7DE,#FFF1D6);border:2px solid #FFD0BD;border-radius:22px;padding:20px 22px;margin-bottom:6px}
+  .sos h3{font-family:'Fredoka';font-size:1.15rem;color:var(--coral-deep);display:flex;align-items:center;gap:8px}
+  .sos p{font-size:.9rem;color:#9a6a52;margin-top:6px}
+  .sos ul{list-style:none;margin-top:10px;display:flex;flex-wrap:wrap;gap:7px}
+  .sos li{font-size:.8rem;font-weight:700;background:#fff;color:var(--coral-deep);padding:5px 11px;border-radius:999px}
+
+  /* resource card */
+  .rcard{
+    display:flex;gap:14px;align-items:flex-start;background:var(--card);border:2px solid var(--line);
+    border-radius:20px;padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow-sm);
+    text-decoration:none;color:inherit;transition:.18s
+  }
+  .rcard:hover{transform:translateY(-3px);border-color:var(--mint);box-shadow:var(--shadow)}
+  .rcard.coral:hover{border-color:var(--coral)}
+  .rcard .ric{font-size:1.7rem;flex-shrink:0;width:50px;height:50px;border-radius:15px;background:#F4FBF8;display:grid;place-items:center}
+  .rcard.coral .ric{background:#FFF1EC}
+  .rcard .rbody{flex:1;min-width:0}
+  .rcard h4{font-family:'Fredoka';font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .rcard .area{font-size:.72rem;font-weight:800;color:var(--mint-deep);background:#EAF7F1;padding:2px 9px;border-radius:999px}
+  .rcard p{font-size:.88rem;color:var(--ink-soft);margin-top:3px}
+  .rcard .ph{font-weight:800;color:var(--ink);font-size:.84rem}
+  .rcard .go{flex-shrink:0;align-self:center;font-size:1.2rem;color:var(--ink-soft)}
+  .rcard:hover .go{color:var(--mint-deep)}
+
+  .disc{background:#FFFDF9;border:2px dashed var(--line);border-radius:18px;padding:14px 18px;margin-top:18px;font-size:.82rem;color:var(--ink-soft);line-height:1.6}
+
+  /* species tags on vet cards */
+  .species{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .species span{font-size:.72rem;font-weight:700;background:#F3EADF;color:var(--ink-soft);padding:3px 9px;border-radius:999px}
+  .species span.hit{background:#E7F5EF;color:var(--mint-deep)}
+
+  /* highlighted (relevant) vet */
+  .rcard.match-vet{border-color:var(--mint);box-shadow:var(--shadow);background:linear-gradient(180deg,#F4FBF8,#fff)}
+  .rcard.match-vet .ric{background:#E7F5EF}
+  .vbadge{font-size:.7rem;font-weight:800;letter-spacing:.4px;color:#fff;background:var(--mint);padding:3px 9px;border-radius:999px;white-space:nowrap}
+
+  /* personalization banner */
+  .vbanner{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#E7F5EF,#FFF1D6);border:2px solid #CDEBE0;border-radius:18px;padding:13px 16px;margin-bottom:6px}
+  .vbanner .vbic{font-size:1.5rem}
+  .vbanner p{font-size:.9rem;font-weight:700;color:var(--ink)}
+  .vbanner p small{display:block;font-weight:600;color:var(--ink-soft);font-size:.78rem}
+  .vbanner a{margin-left:auto;font-size:.78rem;font-weight:800;color:var(--mint-deep);text-decoration:none;white-space:nowrap}
+  .vbanner a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo" onclick="showTab('home')"><span class="blob">🐾</span> PawPair <span style="color:var(--mint-deep)">SG</span></div>
+    <span class="tagpill">made for Singapore homes</span>
+  </div>
+  <nav class="nav">
+    <button id="t-home" class="on" onclick="showTab('home')"><span class="ne">🏠</span><span class="lbl">Home</span></button>
+    <button id="t-health" onclick="showTab('health')"><span class="ne">🩺</span><span class="lbl">Healthcare</span></button>
+    <button id="t-services" onclick="showTab('services')"><span class="ne">🛍️</span><span class="lbl">Services</span></button>
+    <button id="t-community" onclick="showTab('community')"><span class="ne">💬</span><span class="lbl">Community</span></button>
+  </nav>
+
+  <!-- ============ SCREEN 1: LANDING ============ -->
+  <section id="s-home" class="screen active">
+    <div class="hero">
+      <div class="paws">🐶 🐱 🐰 🐹 🐠</div>
+      <h1>Let's find your <span class="hl">perfect pet pairing</span></h1>
+      <p>A friendly matchmaker for Singapore — built around HDB rules, your space, and your day-to-day life.</p>
+    </div>
+    <div class="choices">
+      <div class="choice" onclick="go('s-quiz'); startQuiz()">
+        <span class="ic">🔍</span>
+        <h3>I'm looking for a pet</h3>
+        <p>Answer a few cute questions and get matched with pets that suit your home.</p>
+      </div>
+      <div class="choice b" onclick="go('s-profile')">
+        <span class="ic">🏠</span>
+        <h3>I already have a pet</h3>
+        <p>Tell us about your buddy and chat with a helper that already knows them.</p>
+      </div>
+    </div>
+    <p class="footnote">Housing limits reflect AVS &amp; HDB rules (1 approved dog + up to 2 licensed cats per HDB flat).<br>Always double-check the latest rules at pals.avs.gov.sg before adopting.</p>
+  </section>
+
+  <!-- ============ SCREEN 2: QUIZ ============ -->
+  <section id="s-quiz" class="screen">
+    <button class="backlink" onclick="go('s-home')">‹ start over</button>
+    <div class="progress"><i id="bar" style="width:0%"></i></div>
+    <div class="qcard" id="qcard"><!-- injected --></div>
+  </section>
+
+  <!-- ============ SCREEN 3: RESULTS ============ -->
+  <section id="s-results" class="screen">
+    <button class="backlink" onclick="go('s-quiz'); startQuiz()">‹ retake quiz</button>
+    <div class="results-head">
+      <h2>Your top matches 🎉</h2>
+      <p id="res-sub">Based on your answers, here's who'd thrive in your home.</p>
+    </div>
+    <div id="match-list"></div>
+    <div class="reslinks">
+      <h4>Helpful next steps 🐾</h4>
+      <p>Reputable, Singapore-based places to learn more or adopt responsibly.</p>
+      <div class="linkrow">
+        <a href="https://www.spca.org.sg/adoption/" target="_blank" rel="noopener">SPCA adoptions</a>
+        <a href="https://www.catwelfare.org/" target="_blank" rel="noopener">Cat Welfare Society</a>
+        <a href="https://www.avs.gov.sg/pets/" target="_blank" rel="noopener">AVS pet guides</a>
+        <a href="https://pals.avs.gov.sg/" target="_blank" rel="noopener">Licensing (PALS)</a>
+        <a href="https://www.hdb.gov.sg/residential/living-in-an-hdb-flat/keeping-pets" target="_blank" rel="noopener">HDB pet rules</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 4: PROFILE ============ -->
+  <section id="s-profile" class="screen">
+    <button class="backlink" onclick="go('s-home')">‹ start over</button>
+    <div class="form-card">
+      <span class="qstep">about your buddy</span>
+      <h2 class="fred" style="font-size:1.5rem;margin:4px 0 18px">Tell us who you've got 🐾</h2>
+
+      <div class="field">
+        <label>What kind of pet?</label>
+        <div class="pet-pick" id="petpick">
+          <button data-pet="Dog"><span class="pe">🐶</span>Dog</button>
+          <button data-pet="Cat"><span class="pe">🐱</span>Cat</button>
+          <button data-pet="Rabbit"><span class="pe">🐰</span>Rabbit</button>
+          <button data-pet="Hamster"><span class="pe">🐹</span>Hamster</button>
+          <button data-pet="Guinea pig"><span class="pe">🐹</span>G. pig</button>
+          <button data-pet="Bird"><span class="pe">🦜</span>Bird</button>
+          <button data-pet="Fish"><span class="pe">🐠</span>Fish</button>
+          <button data-pet="Other"><span class="pe">🐾</span>Other</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Their name</label>
+        <input id="p-name" placeholder="e.g. Mochi" maxlength="40">
+      </div>
+
+      <div class="field">
+        <label>Breed or type <small style="font-weight:600;color:var(--ink-soft)">(optional)</small></label>
+        <input id="p-breed" placeholder="e.g. Shih Tzu, domestic shorthair, Netherland Dwarf" maxlength="60">
+      </div>
+
+      <div class="field">
+        <label>How long have you had them?</label>
+        <select id="p-dur">
+          <option value="">Pick one…</option>
+          <option>Less than a month</option>
+          <option>A few months</option>
+          <option>About a year</option>
+          <option>2–4 years</option>
+          <option>5+ years</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Age <small style="font-weight:600;color:var(--ink-soft)">(optional)</small></label>
+        <input id="p-age" placeholder="e.g. 3 years old, or a puppy" maxlength="40">
+      </div>
+
+      <!-- PERSONALITY & PREFERENCES -->
+      <div class="fsub">🐾 Personality &amp; preferences</div>
+
+      <div class="field">
+        <label>Behaviour <small style="font-weight:600;color:var(--ink-soft)">(temperament, habits, quirks)</small></label>
+        <textarea id="p-behaviour" placeholder="e.g. Friendly with people but shy around other dogs, barks at the door, gets anxious when left alone…"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Favourite food <small style="font-weight:600;color:var(--ink-soft)">(treats &amp; meals they love)</small></label>
+        <input id="p-food" placeholder="e.g. Boiled chicken, salmon treats, carrots" maxlength="120">
+      </div>
+
+      <div class="frow">
+        <div class="field" style="margin-bottom:14px">
+          <label>Energy level</label>
+          <select id="p-energy">
+            <option value="">Pick one…</option>
+            <option>Low — chill &amp; sleepy</option>
+            <option>Medium — balanced</option>
+            <option>High — always on the go</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label>Touch sensitivity</label>
+          <select id="p-touch">
+            <option value="">Pick one…</option>
+            <option>Loves cuddles &amp; handling</option>
+            <option>Okay in some spots</option>
+            <option>Prefers not to be touched</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Favourite activities <small style="font-weight:600;color:var(--ink-soft)">(what they love doing)</small></label>
+        <input id="p-activities" placeholder="e.g. Fetch, window-watching, tunnels, sun-bathing" maxlength="120">
+      </div>
+
+      <!-- ID & PAPERS -->
+      <div class="fsub">🪪 ID &amp; papers</div>
+
+      <div class="frow">
+        <div class="field" style="margin-bottom:14px">
+          <label>Microchip / licence no. <small style="font-weight:600;color:var(--ink-soft)">(optional)</small></label>
+          <input id="p-chip" placeholder="e.g. 9000000XXXXXXX" maxlength="40">
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label>Date of birth <small style="font-weight:600;color:var(--ink-soft)">(optional)</small></label>
+          <input id="p-dob" type="text" placeholder="e.g. 12 Mar 2023" maxlength="30">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Registry / pedigree no. <small style="font-weight:600;color:var(--ink-soft)">(optional)</small></label>
+        <input id="p-pedigree" placeholder="e.g. SKC registration number, if any" maxlength="50">
+      </div>
+
+      <div class="field">
+        <label>Birth certificate / pedigree paper <small style="font-weight:600;color:var(--ink-soft)">(optional)</small></label>
+        <label class="upload" for="p-birthcert">
+          <span class="uic">📄</span>
+          <span class="utxt"><b>Upload a photo or PDF</b><small>PawPal can read it for context</small></span>
+          <span class="ustate" id="birthcert-state">Add file</span>
+          <input id="p-birthcert" type="file" accept="image/*,.pdf" onchange="fileChosen(this,'birthcert')">
+        </label>
+      </div>
+
+      <!-- MEDICAL HISTORY -->
+      <div class="fsub">🩺 Medical history</div>
+
+      <div class="frow">
+        <div class="field" style="margin-bottom:14px">
+          <label>Sterilised?</label>
+          <select id="p-sterilised">
+            <option value="">Pick one…</option>
+            <option>Yes</option>
+            <option>No</option>
+            <option>Not sure</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label>Vaccinations</label>
+          <select id="p-vax">
+            <option value="">Pick one…</option>
+            <option>Up to date</option>
+            <option>Partially done</option>
+            <option>Not done / unsure</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Known conditions or allergies <small style="font-weight:600;color:var(--ink-soft)">(optional)</small></label>
+        <input id="p-conditions" placeholder="e.g. sensitive stomach, skin allergy, none known" maxlength="120">
+      </div>
+
+      <div class="field">
+        <label>Current medications <small style="font-weight:600;color:var(--ink-soft)">(optional)</small></label>
+        <input id="p-meds" placeholder="e.g. monthly tick/flea spot-on, none" maxlength="120">
+      </div>
+
+      <div class="frow">
+        <div class="field" style="margin-bottom:14px">
+          <label>Regular vet / clinic <small style="font-weight:600;color:var(--ink-soft)">(optional)</small></label>
+          <input id="p-vet" placeholder="e.g. My Vet @ Tampines" maxlength="60">
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label>Last check-up <small style="font-weight:600;color:var(--ink-soft)">(optional)</small></label>
+          <input id="p-lastvisit" placeholder="e.g. Mar 2026" maxlength="30">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Medical records <small style="font-weight:600;color:var(--ink-soft)">(optional)</small></label>
+        <label class="upload" for="p-medrec">
+          <span class="uic">🗂️</span>
+          <span class="utxt"><b>Upload vaccination card or report</b><small>Photo or PDF — helps PawPal give tailored tips</small></span>
+          <span class="ustate" id="medrec-state">Add file</span>
+          <input id="p-medrec" type="file" accept="image/*,.pdf" onchange="fileChosen(this,'medrec')">
+        </label>
+      </div>
+
+      <div class="disc" style="margin-top:4px;margin-bottom:20px">🔒 This info stays in your browser for this chat and is only sent to PawPal to answer your questions. It isn't a medical record — keep your official documents with your vet and AVS.</div>
+
+      <button class="btn coral" style="width:100%" onclick="openChat()">Meet your pet helper 🐾</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 5: CHAT ============ -->
+  <section id="s-chat" class="screen">
+    <button class="backlink" onclick="go('s-profile')">‹ edit pet info</button>
+    <div class="chat-shell">
+      <div class="chat-head">
+        <div class="av">🐾</div>
+        <div>
+          <h3>PawPal</h3>
+          <small id="chat-sub">your pet helper</small>
+        </div>
+        <button class="edit" onclick="go('s-profile')">edit</button>
+      </div>
+      <div class="chat-log" id="log"></div>
+      <div class="chips" id="chips"></div>
+      <div class="chat-in">
+        <input id="msg" placeholder="Ask anything about your pet…" onkeydown="if(event.key==='Enter')send()">
+        <button onclick="send()">➤</button>
+      </div>
+    </div>
+    <p class="footnote">PawPal is a friendly helper, not a vet. For anything urgent or medical, please see a licensed vet.</p>
+  </section>
+
+  <!-- ============ TAB: HEALTHCARE ============ -->
+  <section id="s-health" class="screen">
+    <div class="page-head">
+      <h1>Pet <span class="hl">healthcare</span> 🩺</h1>
+      <p>Where to go when your buddy needs a check-up — or help right now. All clinics here are Singapore-based.</p>
+    </div>
+
+    <div class="sos">
+      <h3>🚨 Is it an emergency?</h3>
+      <p>Head to a 24-hour clinic straight away (call ahead so they can prepare) if you see any of these:</p>
+      <ul>
+        <li>Trouble breathing</li><li>Seizures</li><li>Uncontrolled bleeding</li>
+        <li>Suspected poisoning</li><li>Can't walk or pee</li><li>Major injury / fall</li>
+        <li>Non-stop vomiting</li><li>Bloated, hard belly</li>
+      </ul>
+    </div>
+
+    <div id="vet-banner"></div>
+
+    <div class="sec-label">24-hour emergency &amp; critical care</div>
+    <div id="vets-emergency"></div>
+
+    <div class="sec-label">Clinics &amp; specialists</div>
+    <div id="vets-clinics"></div>
+
+    <div class="sec-label">Finding a regular vet &amp; staying licensed</div>
+
+    <a class="rcard" href="https://www.sva.org.sg/" target="_blank" rel="noopener">
+      <span class="ric">📋</span>
+      <div class="rbody">
+        <h4>Singapore Veterinary Association</h4>
+        <p>The professional body for vets in Singapore — a trustworthy starting point for finding registered practitioners.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://www.avs.gov.sg/pets/" target="_blank" rel="noopener">
+      <span class="ric">🐶</span>
+      <div class="rbody">
+        <h4>AVS pet care &amp; health guides</h4>
+        <p>Official guidance on vaccinations, sterilisation, microchipping and keeping pets healthy in Singapore.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://pals.avs.gov.sg/" target="_blank" rel="noopener">
+      <span class="ric">🪪</span>
+      <div class="rbody">
+        <h4>Licence your pet (PALS)</h4>
+        <p>All dogs &amp; cats must be licensed. Cat licensing is free until <strong>31 Aug 2026</strong> — do it before the deadline.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <div class="disc">⚠️ Clinic details, hotlines and opening hours can change. Always call ahead before heading down, and confirm the latest info on the clinic's own website. In a poisoning emergency, bring the packaging or a photo of what your pet ate.</div>
+  </section>
+
+  <!-- ============ TAB: COMMUNITY ============ -->
+  <section id="s-community" class="screen">
+    <div class="page-head">
+      <h1>Pet <span class="hl">community</span> 💬</h1>
+      <p>You're not doing this alone. Swap tips, ask questions, and find support from fellow Singapore pawrents.</p>
+    </div>
+
+    <div class="sec-label">Reddit — ask &amp; browse</div>
+
+    <a class="rcard" href="https://www.reddit.com/r/askSingapore/search/?q=pet" target="_blank" rel="noopener">
+      <span class="ric">🇸🇬</span>
+      <div class="rbody">
+        <h4>r/askSingapore</h4>
+        <p>Local crowd that's quick to answer pet questions — vet recos, HDB rules, costs. Linked to a pet search.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://www.reddit.com/r/dogtraining/" target="_blank" rel="noopener">
+      <span class="ric">🦴</span>
+      <div class="rbody">
+        <h4>r/dogtraining</h4>
+        <p>Big, well-moderated community for behaviour &amp; training help — barking, reactivity, house-training and more.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://www.reddit.com/r/CatAdvice/" target="_blank" rel="noopener">
+      <span class="ric">🐱</span>
+      <div class="rbody">
+        <h4>r/CatAdvice</h4>
+        <p>Friendly, judgement-free spot for cat questions, from litter troubles to settling in a new kitty.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <div class="sec-label">Singapore groups &amp; forums</div>
+
+    <a class="rcard coral" href="https://www.facebook.com/groups/singapawreans/" target="_blank" rel="noopener">
+      <span class="ric">👥</span>
+      <div class="rbody">
+        <h4>The Singapawreans Komuniti <span class="area">Facebook</span></h4>
+        <p>An active community group for all Singapore pet owners to share, ask and help each other out.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard coral" href="https://www.facebook.com/groups/dogssingapore/" target="_blank" rel="noopener">
+      <span class="ric">🐕</span>
+      <div class="rbody">
+        <h4>Dogs Singapore <span class="area">Facebook</span></h4>
+        <p>One of the larger local dog-owner groups — recommendations, lost-and-found, and day-to-day advice.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard coral" href="https://forums.hardwarezone.com.sg/forums/pets-inner-circle.93/" target="_blank" rel="noopener">
+      <span class="ric">💻</span>
+      <div class="rbody">
+        <h4>HardwareZone — Pets Inner Circle <span class="area">Forum</span></h4>
+        <p>Long-running local forum thread-board covering adoption, care, services and owner experiences.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <div class="sec-label">Welfare &amp; adoption support</div>
+
+    <a class="rcard" href="https://www.spca.org.sg/" target="_blank" rel="noopener">
+      <span class="ric">❤️</span>
+      <div class="rbody">
+        <h4>SPCA Singapore</h4>
+        <p>Adoption, animal welfare help, and advice if you're struggling to care for a pet. Surrender is a last resort — they can point to options.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://www.catwelfare.org/" target="_blank" rel="noopener">
+      <span class="ric">🐈</span>
+      <div class="rbody">
+        <h4>Cat Welfare Society</h4>
+        <p>Singapore's main cat-focused charity — community cats, sterilisation help, and responsible-ownership resources.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://www.causesforanimals.org/" target="_blank" rel="noopener">
+      <span class="ric">🐾</span>
+      <div class="rbody">
+        <h4>Causes for Animals (SG)</h4>
+        <p>Rescue, rehoming and welfare programmes, including support for Singapore Specials looking for homes.</p>
+      </div><span class="go">›</span>
+    </a>
+
+    <div class="disc">💡 Community groups are great for shared experience, but they aren't a substitute for professional advice. For medical or serious behavioural issues, check anything you read with a vet or qualified trainer — and watch out for well-meaning misinformation.</div>
+  </section>
+
+  <!-- ============ TAB: SERVICES ============ -->
+  <section id="s-services" class="screen">
+    <div class="page-head">
+      <h1>Pet <span class="hl">services</span> 🛍️</h1>
+      <p>From a fresh groom to a loving send-off — Singapore-based services for every stage of your pet's life.</p>
+    </div>
+
+    <div class="sec-label">✂️ Grooming</div>
+
+    <a class="rcard" href="https://www.pawpykisses.com/" target="_blank" rel="noopener">
+      <span class="ric">🛁</span>
+      <div class="rbody">
+        <h4>Pawpy Kisses <span class="area">Online + salon</span></h4>
+        <p>Groomers trained in breed-specific cuts for dogs and cats, plus a full online pet shop.</p>
+        <div class="species"><span>Dogs</span><span>Cats</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://olo.sg/" target="_blank" rel="noopener">
+      <span class="ric">✂️</span>
+      <div class="rbody">
+        <h4>OLO Pets <span class="area">South-west</span></h4>
+        <p>Cage-free grooming with gentle, skilled groomers — handy for nervous dogs. Boarding too.</p>
+        <div class="species"><span>Dogs</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://www.petsstation.com.sg/" target="_blank" rel="noopener">
+      <span class="ric">🚿</span>
+      <div class="rbody">
+        <h4>Pets' Station <span class="area">Marsiling</span></h4>
+        <p>Grooming packages and bubble spa baths, with an optional pet-taxi pick-up and return.</p>
+        <div class="species"><span>Dogs</span><span>Cats</span><span>Small pets</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <div class="sec-label">🛒 Food &amp; treats</div>
+
+    <a class="rcard coral" href="https://www.petloverscentre.com/" target="_blank" rel="noopener">
+      <span class="ric">🏬</span>
+      <div class="rbody">
+        <h4>Pet Lovers Centre <span class="area">60+ outlets</span></h4>
+        <p>Singapore's largest chain — food, treats, supplements and accessories, with staff trained to advise.</p>
+        <div class="species"><span>Dogs</span><span>Cats</span><span>Small pets</span><span>Fish</span><span>Birds</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard coral" href="https://kohepets.com.sg/" target="_blank" rel="noopener">
+      <span class="ric">📦</span>
+      <div class="rbody">
+        <h4>Kohepets <span class="area">Online</span></h4>
+        <p>Trusted online shop with dry, wet, raw and freeze-dried options and swift delivery.</p>
+        <div class="species"><span>Dogs</span><span>Cats</span><span>Small pets</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard coral" href="https://catsmart.com.sg/" target="_blank" rel="noopener">
+      <span class="ric">🐱</span>
+      <div class="rbody">
+        <h4>CatSmart <span class="area">Cat specialist</span></h4>
+        <p>Singapore's largest cat store — food, litter, toys and furniture, with cat-savvy staff.</p>
+        <div class="species"><span>Cats</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard coral" href="https://www.petsgantry.com/" target="_blank" rel="noopener">
+      <span class="ric">🐹</span>
+      <div class="rbody">
+        <h4>Pet's Gantry <span class="area">Toa Payoh</span></h4>
+        <p>Family shop that specialises in small critters — rabbits, guinea pigs and hamsters — plus the usual supplies.</p>
+        <div class="species"><span>Rabbits</span><span>Guinea pigs</span><span>Hamsters</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <div class="sec-label">🏠 Daycare &amp; pet sitting</div>
+
+    <a class="rcard" href="https://godpawrents.com/" target="_blank" rel="noopener">
+      <span class="ric">🤝</span>
+      <div class="rbody">
+        <h4>Godpawrents <span class="area">Islandwide</span></h4>
+        <p>Platform of Singpass-verified pet sitters for home boarding, daycare and house visits — a cosy alternative to hotels.</p>
+        <div class="species"><span>Dogs</span><span>Cats</span><span>Small pets</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://upforpaws.com/" target="_blank" rel="noopener">
+      <span class="ric">🐕</span>
+      <div class="rbody">
+        <h4>Up For Paws <span class="area">Daycare + boarding</span></h4>
+        <p>Force-free dog daycare with walks, naps and daily photo updates; boarding and dog-walking too.</p>
+        <div class="species"><span>Dogs</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://thesnuggery.com.sg/" target="_blank" rel="noopener">
+      <span class="ric">📹</span>
+      <div class="rbody">
+        <h4>The Snuggery <span class="area">Katong &amp; Thomson</span></h4>
+        <p>Dog daycare and pet hotel with live webcam streaming, so you can check in any time (AVS-licensed).</p>
+        <div class="species"><span>Dogs</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <div class="sec-label">🎓 Training</div>
+
+    <a class="rcard coral" href="https://www.tailsup.sg/" target="_blank" rel="noopener">
+      <span class="ric">🦴</span>
+      <div class="rbody">
+        <h4>Tails Up <span class="area">Changi</span></h4>
+        <p>Force-free, cage-free day school and training across a big indoor-outdoor space, tailored to life stage and temperament.</p>
+        <div class="species"><span>Dogs</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard coral" href="https://offleash.sg/" target="_blank" rel="noopener">
+      <span class="ric">🎯</span>
+      <div class="rbody">
+        <h4>Offleash <span class="area">Balestier</span></h4>
+        <p>One-stop centre using positive-reinforcement, evidence-based training — plus daycare, boarding and grooming.</p>
+        <div class="species"><span>Dogs</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard coral" href="https://pawsomesg.co/" target="_blank" rel="noopener">
+      <span class="ric">🏫</span>
+      <div class="rbody">
+        <h4>Pawsome SG <span class="area">One-stop</span></h4>
+        <p>Training sessions to strengthen your bond, alongside grooming, boarding and pet transport.</p>
+        <div class="species"><span>Dogs</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <div class="sec-label">🕊️ Memorial &amp; aftercare</div>
+
+    <div class="sos" style="background:linear-gradient(120deg,#EFF1FB,#F4FBF8);border-color:#D6DCEF">
+      <h3 style="color:var(--mint-deep)">🌈 A gentle goodbye</h3>
+      <p style="color:var(--ink-soft)">In Singapore, pet burial is only allowed on private property, so cremation is the usual choice. These providers handle farewells with care, and many offer keepsakes and grief support. Take your time — there's no rush.</p>
+    </div>
+
+    <a class="rcard" href="https://www.mandaipetssanctuary.com/" target="_blank" rel="noopener">
+      <span class="ric">🕊️</span>
+      <div class="rbody">
+        <h4>Mandai Pets Sanctuary <span class="area">Mandai · 24/7</span></h4>
+        <p>Singapore's first and longest-running pet crematorium and columbarium; private, individual or communal options. <span class="ph">☎ 6232 6617</span></p>
+        <div class="species"><span>All pets</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://thegreenmortician.sg/" target="_blank" rel="noopener">
+      <span class="ric">💧</span>
+      <div class="rbody">
+        <h4>The Green Mortician <span class="area">Aqua · 24/7</span></h4>
+        <p>NEA-approved water (aqua) cremation — a gentler, eco-friendly alternative to flame, with memorial services and keepsakes.</p>
+        <div class="species"><span>All pets</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://rainbowparadise.sg/" target="_blank" rel="noopener">
+      <span class="ric">🌈</span>
+      <div class="rbody">
+        <h4>Rainbow Paradise <span class="area">Private farewell</span></h4>
+        <p>A calm farewell room, floral arrangements, complimentary urn, bone-picking or sea scattering, and an online obituary page.</p>
+        <div class="species"><span>All pets</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <a class="rcard" href="https://sanctuarypetcremation.com.sg/" target="_blank" rel="noopener">
+      <span class="ric">🏞️</span>
+      <div class="rbody">
+        <h4>Sanctuary Pet Cremation <span class="area">Kranji</span></h4>
+        <p>Private cremation with quick ash return, a pet columbarium, and home-visit euthanasia arrangements.</p>
+        <div class="species"><span>All pets</span></div>
+      </div><span class="go">›</span>
+    </a>
+
+    <div class="disc">💛 Grieving a pet is real and valid. If it helps to talk, the welfare groups and forums in the <a href="javascript:void(0)" onclick="showTab('community')" style="color:var(--mint-deep);font-weight:800;text-decoration:none">Community</a> tab include people who understand pet loss. Prices, locations and services change — please confirm directly with each provider.</div>
+  </section>
+</div>
+
+<script>
+/* ---------------- navigation ---------------- */
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showTab(tab){
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('on'));
+  if(tab==='home'){ document.getElementById('t-home').classList.add('on'); go('s-home'); }
+  else if(tab==='health'){ document.getElementById('t-health').classList.add('on'); renderVets(); go('s-health'); }
+  else if(tab==='services'){ document.getElementById('t-services').classList.add('on'); go('s-services'); }
+  else if(tab==='community'){ document.getElementById('t-community').classList.add('on'); go('s-community'); }
+}
+
+/* ================= VET DIRECTORY ================= */
+const SPECIES_LABEL={dog:'Dogs',cat:'Cats',rabbit:'Rabbits','guinea pig':'Guinea pigs',hamster:'Hamsters',bird:'Birds',fish:'Fish',reptile:'Reptiles'};
+const EXOTIC=['rabbit','guinea pig','hamster','bird','fish','reptile'];
+
+function petKeyFromType(type){
+  const map={Dog:'dog',Cat:'cat',Rabbit:'rabbit',Hamster:'hamster','Guinea pig':'guinea pig',Bird:'bird',Fish:'fish',Other:'exotic'};
+  return map[type]||null;
+}
+let currentPetType=null, currentPetKey=null;
+function setPetContext(type){
+  currentPetType=type||null;
+  currentPetKey=type?petKeyFromType(type):null;
+  renderVets();
+}
+
+const VETS=[
+  // ----- 24-hour emergency -----
+  {emerg:true, name:'VES Hospital', area:'Whitley', ic:'🏥', url:'https://www.veshospital.com.sg/',
+   blurb:"Singapore's largest specialty & emergency hospital — cardiology, neurology, oncology, ICU. Referral & 24/7 emergency.",
+   species:['dog','cat']},
+  {emerg:true, name:'Beecroft Animal Specialist & Emergency', area:'Alexandra', ic:'🐾', phone:'6996 1812', url:'https://beecroft.com.sg/',
+   blurb:'Walk-in emergencies with a dedicated avian & exotics team and 24-hour ICU support.',
+   species:['dog','cat','rabbit','guinea pig','hamster','bird','fish','reptile']},
+  {emerg:true, name:'Advanced VetCare', area:'Bedok', ic:'🚑', phone:'6636 1788', url:'https://www.advancedvetcare.sg/',
+   blurb:'24-hour clinic with ICU and on-site CT/X-ray for trauma, poisoning and critical cases.',
+   species:['dog','cat','rabbit','hamster','guinea pig','bird']},
+  {emerg:true, name:'Westside Emergency Vet', area:'Serangoon', ic:'🏥', phone:'6931 0095', url:'https://www.westsideemergency.com.sg/',
+   blurb:'Dedicated 24-hour emergency & referral hospital — one of three registered vet hospitals here.',
+   species:['dog','cat','rabbit','hamster','guinea pig']},
+  {emerg:true, name:'Companion Animal Surgery', area:'Balestier', ic:'🩹', url:'https://www.comvet.com/',
+   blurb:'Full-service 24-hour clinic running since 1989, near Novena. Also sees exotics.',
+   species:['dog','cat','rabbit','guinea pig','hamster','bird']},
+  {emerg:true, name:'Animal Wellness Referral Centre', area:'Bukit Timah', ic:'🌿', phone:'6530 3530', url:'https://www.awrc.sg/',
+   blurb:'24-hour clinic with an integrative approach and a dedicated exotic-animal service.',
+   species:['dog','cat','rabbit','bird','hamster','guinea pig','reptile']},
+  // ----- clinics & specialists -----
+  {emerg:false, name:'Beecroft Avian & Exotics', area:'Alexandra', ic:'🦜', url:'https://www.birdvet.com.sg/',
+   blurb:"Singapore's only exotics clinic led by a board-certified exotic-mammal specialist — birds, reptiles, small mammals & fish. (No dogs/cats.)",
+   species:['rabbit','guinea pig','hamster','bird','fish','reptile']},
+  {emerg:false, name:'AAVC — Animal & Avian Veterinary Clinic', area:'Yishun', ic:'🐦', url:'https://aavcsg.wixsite.com/aavc',
+   blurb:'Family clinic strong in avian & exotic care, alongside dogs and cats.',
+   species:['dog','cat','rabbit','guinea pig','hamster','bird','reptile']},
+  {emerg:false, name:'Vet Affinity', area:'Jurong (West)', ic:'🐰', url:'https://www.vetaffinity.com.sg/',
+   blurb:'Small-animal & exotic clinic with separate dog and cat/exotic wards.',
+   species:['dog','cat','rabbit','guinea pig','hamster']},
+  {emerg:false, name:'Monster Pet Vet', area:'Everton Park', ic:'🦎', url:'https://www.monsterpetvet.com/',
+   blurb:"Rabbit-savvy sisters' clinic that also sees reptiles like bearded dragons.",
+   species:['dog','cat','rabbit','hamster','reptile']},
+  {emerg:false, name:'The Animal Clinic', area:'Katong & Clementi', ic:'🐕', url:'https://www.animalclinic.com.sg/',
+   blurb:'Long-established general practice for dogs and cats across two branches.',
+   species:['dog','cat']}
+];
+
+function vetIsRelevant(v){
+  if(!currentPetKey) return false;
+  if(currentPetKey==='exotic') return v.species.some(s=>EXOTIC.includes(s));
+  return v.species.includes(currentPetKey);
+}
+function speciesHit(s){
+  if(!currentPetKey) return false;
+  if(currentPetKey==='exotic') return EXOTIC.includes(s);
+  return s===currentPetKey;
+}
+function vetCard(v){
+  const relevant=vetIsRelevant(v);
+  const label = currentPetKey==='exotic' ? 'your exotic pet' : (SPECIES_LABEL[currentPetKey]||'').toLowerCase().replace(/s$/,'');
+  const badge = relevant ? `<span class="vbadge">★ Good for ${label}</span>` : '';
+  const phone = v.phone ? ` <span class="ph">☎ ${v.phone}</span>` : '';
+  const tags = v.species.map(s=>`<span class="${speciesHit(s)?'hit':''}">${SPECIES_LABEL[s]}</span>`).join('');
+  return `<a class="rcard ${v.emerg?'coral':''} ${relevant?'match-vet':''}" href="${v.url}" target="_blank" rel="noopener">
+    <span class="ric">${v.ic}</span>
+    <div class="rbody">
+      <h4>${v.name} <span class="area">${v.area}</span> ${badge}</h4>
+      <p>${v.blurb}${phone}</p>
+      <div class="species">${tags}</div>
+    </div><span class="go">›</span>
+  </a>`;
+}
+function renderVets(){
+  // personalization banner
+  const banner=document.getElementById('vet-banner');
+  if(currentPetType){
+    const nice = currentPetType==='Other' ? 'your exotic pet' : `your ${currentPetType.toLowerCase()}`;
+    banner.innerHTML=`<div class="vbanner">
+      <span class="vbic">🔎</span>
+      <p>Highlighting vets that care for ${nice}<small>Matching clinics are pulled to the top and marked ★</small></p>
+      <a href="javascript:void(0)" onclick="go('s-profile')">Change pet</a>
+    </div>`;
+  } else {
+    banner.innerHTML=`<div class="vbanner">
+      <span class="vbic">🐾</span>
+      <p>Tell us about your pet to highlight the right vets<small>We'll pull the clinics that treat your animal to the top</small></p>
+      <a href="javascript:void(0)" onclick="go('s-profile')">Add pet</a>
+    </div>`;
+  }
+  // sort: relevant first (stable within each group)
+  const order=v=>vetIsRelevant(v)?0:1;
+  const emerg=VETS.filter(v=>v.emerg).slice().sort((a,b)=>order(a)-order(b));
+  const clinics=VETS.filter(v=>!v.emerg).slice().sort((a,b)=>order(a)-order(b));
+  document.getElementById('vets-emergency').innerHTML=emerg.map(vetCard).join('');
+  document.getElementById('vets-clinics').innerHTML=clinics.map(vetCard).join('');
+}
+
+/* ================= QUIZ ENGINE ================= */
+const QUESTIONS=[
+  {key:'home',q:'Where do you live?',hint:'This decides which pets are even allowed.',opts:[
+    {v:'hdb',em:'🏢',t:'HDB flat',s:'1 approved dog + up to 2 cats'},
+    {v:'condo',em:'🏙️',t:'Condo',s:'check MCST by-laws'},
+    {v:'landed',em:'🏡',t:'Landed home',s:'most flexible'}
+  ]},
+  {key:'space',q:'How much room is there?',hint:'',opts:[
+    {v:'compact',em:'📦',t:'Compact',s:'cosy unit'},
+    {v:'mid',em:'🛋️',t:'Medium',s:'comfy space'},
+    {v:'spacious',em:'🌿',t:'Spacious',s:'lots of room'}
+  ]},
+  {key:'alone',q:'How long would your pet be alone on a typical day?',hint:'Singapore work hours can be long — be honest!',opts:[
+    {v:'low',em:'🏠',t:'Under 4 hrs',s:'mostly home'},
+    {v:'mid',em:'🕓',t:'4–8 hrs',s:'normal workday'},
+    {v:'high',em:'🌙',t:'8+ hrs',s:'long days out'}
+  ]},
+  {key:'budget',q:"What's your monthly pet budget?",hint:'Food, litter, vet savings, grooming, insurance.',opts:[
+    {v:'low',em:'🪙',t:'Under $50',s:'keeping it light'},
+    {v:'mid',em:'💵',t:'$50–150',s:'comfortable'},
+    {v:'high',em:'💳',t:'$150+',s:'room to spend'}
+  ]},
+  {key:'energy',q:'What energy are you hoping for?',hint:'',opts:[
+    {v:'chill',em:'😌',t:'Chill',s:'calm & low-key'},
+    {v:'balanced',em:'🙂',t:'Balanced',s:'a bit of both'},
+    {v:'energetic',em:'⚡',t:'Energetic',s:'playful & active'}
+  ]},
+  {key:'interact',q:'How hands-on do you want it?',hint:'',opts:[
+    {v:'cuddly',em:'🤗',t:'Cuddly & interactive',s:'wants my attention'},
+    {v:'either',em:'👌',t:'Somewhere between',s:'no strong preference'},
+    {v:'indep',em:'🧊',t:'Independent',s:'happy doing its own thing'}
+  ]},
+  {key:'exp',q:'Have you cared for a pet before?',hint:'',opts:[
+    {v:'first',em:'🌱',t:'First-timer',s:'brand new to this'},
+    {v:'some',em:'⭐',t:'Some experience',s:"I've done this before"}
+  ]},
+  {key:'noise',q:'How close are your neighbours?',hint:'Barking & caterwauling are real causes of HDB complaints.',opts:[
+    {v:'sensitive',em:'🤫',t:'Very close — keep it quiet',s:'thin walls'},
+    {v:'ok',em:'🔉',t:'Some noise is fine',s:'a bit of leeway'},
+    {v:'free',em:'🔊',t:'Noise no issue',s:'detached / tolerant'}
+  ]},
+  {key:'time',q:'How much daily care time can you give?',hint:'Walks, grooming, litter, play.',opts:[
+    {v:'min',em:'⏳',t:'Minimal',s:'quick & simple'},
+    {v:'mod',em:'⏰',t:'Moderate',s:'a chunk each day'},
+    {v:'lots',em:'🗓️',t:'Lots',s:'happy to invest time'}
+  ]},
+  {key:'allergy',q:'Any fur allergies in your household?',hint:'',opts:[
+    {v:'yes',em:'🤧',t:'Yes',s:'sensitive to fur/dander'},
+    {v:'no',em:'✅',t:'No',s:'all clear'}
+  ]}
+];
+
+/* pet database with trait profiles + SG notes */
+const PETS=[
+  {id:'cat',name:'Cat',emoji:'🐱',
+   homes:['hdb','condo','landed'], allergen:true,
+   energy:'balanced', interact:'either', alone:'high', care:'mod', noise:'ok', budget:'mid', exp:'first',
+   note:'Independent and litter-trained — great for busy Singapore households. HDB now allows up to 2 (licence by 31 Aug 2026).',
+   tags:['HDB-friendly','Good when you’re out','Low noise']},
+  {id:'smalldog',name:'Small dog (HDB-approved)',emoji:'🐶',
+   homes:['hdb','condo','landed'], allergen:true,
+   energy:'balanced', interact:'cuddly', alone:'low', care:'lots', noise:'sensitive', budget:'mid', exp:'some',
+   note:'Think Shih Tzu, Poodle or Maltese — on HDB’s approved list. Needs walks, company and noise training. Avoid flat-faced breeds in our heat.',
+   tags:['Needs walks','Wants company','Climate care']},
+  {id:'special',name:'Singapore Special (adopt)',emoji:'🐕',
+   homes:['condo','landed','hdb'], allergen:true,
+   energy:'energetic', interact:'cuddly', alone:'low', care:'lots', noise:'sensitive', budget:'mid', exp:'some',
+   note:'Local mixed-breed via Project ADORE (under 55cm for HDB). Loyal and hardy in our climate — needs daily exercise and an experienced hand.',
+   tags:['Adopt, don’t shop','Active','Project ADORE']},
+  {id:'rabbit',name:'Rabbit',emoji:'🐰',
+   homes:['hdb','condo','landed'], allergen:true,
+   energy:'chill', interact:'either', alone:'mid', care:'mod', noise:'free', budget:'mid', exp:'first',
+   note:'Quiet, indoor and silent — no HDB breed rules apply. Needs space to hop, hay daily and a rabbit-savvy vet (avoid the heat).',
+   tags:['Silent','HDB-friendly','Indoor']},
+  {id:'guinea',name:'Guinea pig',emoji:'🐹',
+   homes:['hdb','condo','landed'], allergen:true,
+   energy:'chill', interact:'cuddly', alone:'mid', care:'mod', noise:'free', budget:'low', exp:'first',
+   note:'Gentle, social and squeaky-cute — best kept in pairs. A lovely, low-drama first pet that stays put in a cage.',
+   tags:['Gentle','Great first pet','Keep in pairs']},
+  {id:'hamster',name:'Hamster',emoji:'🐹',
+   homes:['hdb','condo','landed'], allergen:false,
+   energy:'balanced', interact:'indep', alone:'high', care:'min', noise:'free', budget:'low', exp:'first',
+   note:'Tiny footprint, low cost, mostly nocturnal. Solo housing only. Short lifespan (~2 yrs) — gentle for first-timers but not very hands-on.',
+   tags:['Low space','Budget-friendly','Nocturnal']},
+  {id:'fish',name:'Aquarium fish',emoji:'🐠',
+   homes:['hdb','condo','landed'], allergen:false,
+   energy:'chill', interact:'indep', alone:'high', care:'min', noise:'free', budget:'low', exp:'first',
+   note:'Calming, silent and totally fine when you’re out all day. A betta or small community tank suits compact flats beautifully.',
+   tags:['Silent','Perfect when you’re out','Compact']},
+  {id:'bird',name:'Budgie (small bird)',emoji:'🦜',
+   homes:['hdb','condo','landed'], allergen:false,
+   energy:'energetic', interact:'cuddly', alone:'mid', care:'mod', noise:'free', budget:'mid', exp:'some',
+   note:'Bright, social and interactive — can learn to bond closely. Can be chirpy though, so think about close neighbours.',
+   tags:['Interactive','Sociable','Some noise']}
+];
+
+let qi=0, answers={};
+function startQuiz(){ qi=0; answers={}; renderQ(); }
+function renderQ(){
+  const Q=QUESTIONS[qi];
+  document.getElementById('bar').style.width=((qi)/(QUESTIONS.length))*100+'%';
+  const two=Q.opts.length===2?'two':'';
+  let html=`<span class="qstep">Question ${qi+1} of ${QUESTIONS.length}</span>
+    <h2>${Q.q}</h2>${Q.hint?`<p class="qhint">${Q.hint}</p>`:'<div style="height:8px"></div>'}
+    <div class="opts ${two}">`;
+  Q.opts.forEach(o=>{
+    const sel=answers[Q.key]===o.v?'sel':'';
+    html+=`<button class="opt ${sel}" onclick="pick('${Q.key}','${o.v}')">
+      <span class="em">${o.em}</span><span>${o.t}${o.s?`<small>${o.s}</small>`:''}</span></button>`;
+  });
+  html+=`</div><div class="qnav">
+    <button class="btn ghost" onclick="prevQ()" ${qi===0?'style="visibility:hidden"':''}>‹ Back</button>
+    <button class="btn" id="nextbtn" onclick="nextQ()" ${answers[Q.key]?'':'disabled'}>${qi===QUESTIONS.length-1?'See matches 🎉':'Next ›'}</button>
+  </div>`;
+  document.getElementById('qcard').innerHTML=html;
+}
+function pick(k,v){ answers[k]=v; renderQ(); }
+function prevQ(){ if(qi>0){qi--;renderQ();} }
+function nextQ(){
+  if(!answers[QUESTIONS[qi].key])return;
+  if(qi<QUESTIONS.length-1){qi++;renderQ();}
+  else{ document.getElementById('bar').style.width='100%'; computeResults(); go('s-results'); }
+}
+
+/* ---- scoring ---- */
+function computeResults(){
+  const a=answers;
+  const scored=PETS.map(p=>{
+    let score=0, flags=[], allowed=true;
+
+    // hard housing filter
+    if(!p.homes.includes(a.home)){
+      // dogs needing landed in HDB etc.
+      allowed=false;
+    }
+    if(allowed) score+=30;
+
+    // trait matches
+    const m=(petVal,ansKey,pts)=>{ if(p[petVal]===a[ansKey]) score+=pts; };
+    m('energy','energy',16);
+    m('interact','interact',14);
+    m('alone','alone',16);   // matching tolerance
+    m('care','time',12);
+    m('budget','budget',10);
+    m('noise','noise',8);
+
+    // alone-time: reward pets that tolerate MORE alone time than needed
+    const lvl={low:0,mid:1,high:2};
+    if(lvl[p.alone] >= lvl[a.alone]) score+=10; else score-=14;
+
+    // noise: if user is sensitive, reward quiet pets
+    if(a.noise==='sensitive'){
+      if(['fish','rabbit','guinea','hamster','cat'].includes(p.id)) score+=12;
+      if(['smalldog','special','bird'].includes(p.id)){ score-=10; flags.push(['warn','Noise to manage']); }
+    }
+    // experience
+    if(a.exp==='first'){
+      if(p.exp==='first') score+=10;
+      if(['special','smalldog'].includes(p.id)) score-=6;
+    }
+    // allergy
+    if(a.allergy==='yes'){
+      if(p.allergen){ score-=18; flags.push(['warn','Allergy risk']); }
+      else { score+=14; flags.push(['good','Allergy-friendlier']); }
+    }
+    // budget realism
+    if(a.budget==='low' && p.budget==='mid') score-=6;
+
+    // housing-specific flags
+    if(a.home==='hdb'){
+      if(p.id==='smalldog') flags.push(['good','On HDB approved list']);
+      if(p.id==='cat') flags.push(['good','Up to 2 in HDB']);
+      if(p.id==='special') flags.push(['warn','HDB only via Project ADORE, <55cm']);
+    }
+
+    // good tolerance flag
+    if(lvl[p.alone] >= lvl[a.alone] && a.alone==='high') flags.push(['good','Fine when you’re out']);
+
+    return {p, score:Math.max(0,Math.round(score)), allowed, flags};
+  });
+
+  // keep allowed, sort by score
+  let list=scored.filter(x=>x.allowed).sort((a,b)=>b.score-a.score);
+  if(list.length===0) list=scored.sort((a,b)=>b.score-a.score);
+
+  const max=list[0].score||1;
+  const top=list.slice(0,4);
+  const sub=document.getElementById('res-sub');
+  const homeLabel={hdb:'HDB flat',condo:'condo',landed:'landed home'}[a.home];
+  sub.textContent=`Tuned to your ${homeLabel}, ${a.alone==='high'?'longer days out':'time at home'}, and a ${a.energy} vibe.`;
+
+  const wrap=document.getElementById('match-list');
+  wrap.innerHTML=top.map((x,i)=>{
+    const pct=Math.round((x.score/max)*100);
+    const flagHtml=x.flags.slice(0,3).map(f=>`<span class="flag ${f[0]}">${f[1]}</span>`).join('');
+    return `<div class="match ${i===0?'top':''}">
+      <div class="face">${x.p.emoji}</div>
+      <div style="flex:1">
+        <h3>${x.p.name}
+          ${i===0?'<span class="crown">★ BEST FIT</span>':''}
+          <span class="scoretag">${pct}% match</span>
+        </h3>
+        <p class="why">${x.p.note}</p>
+        <div class="flags">${flagHtml||x.p.tags.map(t=>`<span class="flag">${t}</span>`).join('')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ================= PROFILE + CHAT ================= */
+let selectedPet='';
+document.getElementById('petpick').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#petpick button').forEach(x=>x.classList.remove('sel'));
+  b.classList.add('sel'); selectedPet=b.dataset.pet;
+  setPetContext(selectedPet);
+});
+
+/* uploaded documents (birth cert / medical records) */
+let docs={birthcert:null, medrec:null};
+function fileChosen(input, kind){
+  const file=input.files && input.files[0];
+  const stateEl=document.getElementById(kind+'-state');
+  if(!file){ docs[kind]=null; if(stateEl) stateEl.textContent='Add file'; return; }
+  if(file.size > 4*1024*1024){
+    alert('That file is a bit big (max 4MB). Try a smaller photo or PDF. 🐾');
+    input.value=''; docs[kind]=null; if(stateEl) stateEl.textContent='Add file'; return;
+  }
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const b64=String(reader.result).split(',')[1];
+    const isPdf=file.type==='application/pdf' || /\.pdf$/i.test(file.name);
+    docs[kind]={
+      kind:isPdf?'document':'image',
+      media_type:isPdf?'application/pdf':(file.type||'image/jpeg'),
+      data:b64,
+      filename:file.name
+    };
+    if(stateEl) stateEl.textContent='✓ Added';
+  };
+  reader.readAsDataURL(file);
+}
+
+let profile={}, history=[], docsAttached=false;
+function openChat(){
+  const name=document.getElementById('p-name').value.trim();
+  if(!selectedPet){ alert('Pick what kind of pet you have first! 🐾'); return; }
+  if(!name){ alert("What's your pet's name? 🐾"); return; }
+  profile={
+    type:selectedPet,
+    name,
+    breed:document.getElementById('p-breed').value.trim(),
+    duration:document.getElementById('p-dur').value,
+    age:document.getElementById('p-age').value.trim(),
+    behaviour:document.getElementById('p-behaviour').value.trim(),
+    food:document.getElementById('p-food').value.trim(),
+    energy:document.getElementById('p-energy').value,
+    touch:document.getElementById('p-touch').value,
+    activities:document.getElementById('p-activities').value.trim(),
+    chip:document.getElementById('p-chip').value.trim(),
+    dob:document.getElementById('p-dob').value.trim(),
+    pedigree:document.getElementById('p-pedigree').value.trim(),
+    sterilised:document.getElementById('p-sterilised').value,
+    vax:document.getElementById('p-vax').value,
+    conditions:document.getElementById('p-conditions').value.trim(),
+    meds:document.getElementById('p-meds').value.trim(),
+    vet:document.getElementById('p-vet').value.trim(),
+    lastvisit:document.getElementById('p-lastvisit').value.trim()
+  };
+  const emojiMap={Dog:'🐶',Cat:'🐱',Rabbit:'🐰',Hamster:'🐹','Guinea pig':'🐹',Bird:'🦜',Fish:'🐠',Other:'🐾'};
+  document.querySelector('#s-chat .av').textContent=emojiMap[selectedPet]||'🐾';
+  document.getElementById('chat-sub').textContent=`helping you with ${name}`;
+  setPetContext(selectedPet);
+
+  history=[];
+  document.getElementById('log').innerHTML='';
+  const greet=`Hi! I'm PawPal 🐾 I know you've got ${profile.duration?('a '+selectedPet.toLowerCase()+' named '+name+' ('+profile.duration.toLowerCase()+' together)'):(selectedPet.toLowerCase()+' named '+name)}. What can I help you with today?`;
+  addBubble('ai',greet);
+  docsAttached=false;
+  const attached=[];
+  if(docs.birthcert) attached.push('birth certificate');
+  if(docs.medrec) attached.push('medical records');
+  if(attached.length) addBubble('sys','📎 Attached for context: '+attached.join(' & '));
+  renderChips();
+  go('s-chat');
+  setTimeout(()=>document.getElementById('msg').focus(),300);
+}
+
+function renderChips(){
+  const t=profile.type;
+  const sets={
+    Dog:['Is my flat too small?','Help with barking','Vet visit checklist'],
+    Cat:['Litter box tips','Leaving them alone all day','Do I need to license them?'],
+    Rabbit:['Keeping cool in SG heat','What should they eat?','Bunny-proofing my home'],
+    Hamster:['Right cage size?','Is mine lonely?','Healthy treats'],
+    'Guinea pig':['Do they need a friend?','Diet basics','Signs they’re happy'],
+    Bird:['Reduce noise for neighbours','Bonding tips','Safe foods'],
+    Fish:['Tank cycling basics','Water change schedule','Why is my water cloudy?'],
+    Other:['Care basics','Feeding tips','Finding a vet']
+  };
+  const chips=sets[t]||sets.Other;
+  document.getElementById('chips').innerHTML=chips.map(c=>`<button onclick="quick('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('');
+}
+function quick(txt){ document.getElementById('msg').value=txt; send(); }
+
+function addBubble(role,text){
+  const log=document.getElementById('log');
+  const div=document.createElement('div');
+  div.className='bub '+role;
+  div.textContent=text;
+  log.appendChild(div);
+  log.scrollTop=log.scrollHeight;
+  return div;
+}
+function showTyping(){
+  const log=document.getElementById('log');
+  const t=document.createElement('div');
+  t.className='typing'; t.id='typing';
+  t.innerHTML='<i></i><i></i><i></i>';
+  log.appendChild(t); log.scrollTop=log.scrollHeight;
+}
+function hideTyping(){ const t=document.getElementById('typing'); if(t)t.remove(); }
+
+function systemPrompt(){
+  return `You are PawPal, a warm, encouraging pet-care helper for pet owners in Singapore. 
+You are speaking with the owner of this pet — this context is already known, so don't ask them to repeat it:
+- Pet type: ${profile.type}
+- Name: ${profile.name}
+${profile.breed?`- Breed/type: ${profile.breed}\n`:''}${profile.age?`- Age: ${profile.age}\n`:''}${profile.dob?`- Date of birth: ${profile.dob}\n`:''}${profile.duration?`- Time together: ${profile.duration}\n`:''}${profile.behaviour?`- Behaviour: ${profile.behaviour}\n`:''}${profile.food?`- Favourite food: ${profile.food}\n`:''}${profile.energy?`- Energy level: ${profile.energy}\n`:''}${profile.touch?`- Touch sensitivity: ${profile.touch}\n`:''}${profile.activities?`- Favourite activities: ${profile.activities}\n`:''}${profile.chip?`- Microchip/licence no.: ${profile.chip}\n`:''}${profile.pedigree?`- Registry/pedigree no.: ${profile.pedigree}\n`:''}${profile.sterilised?`- Sterilised: ${profile.sterilised}\n`:''}${profile.vax?`- Vaccinations: ${profile.vax}\n`:''}${profile.conditions?`- Known conditions/allergies: ${profile.conditions}\n`:''}${profile.meds?`- Current medications: ${profile.meds}\n`:''}${profile.vet?`- Regular vet/clinic: ${profile.vet}\n`:''}${profile.lastvisit?`- Last check-up: ${profile.lastvisit}\n`:''}${(docs.birthcert||docs.medrec)?`- The owner has attached document(s) (birth certificate and/or medical records) — read them for context when relevant.\n`:''}
+Use the pet's name naturally. Give practical, friendly, Singapore-aware advice (HDB living, climate heat/humidity, local vet norms, AVS licensing where relevant). Use the medical details to tailor advice, but you are NOT a vet and must not diagnose or prescribe — for anything urgent, painful, or medical, gently urge them to see a licensed vet. Keep replies concise — a short paragraph or a few bullets. Be cheerful but never pushy.`;
+}
+
+async function send(){
+  const input=document.getElementById('msg');
+  const text=input.value.trim();
+  if(!text)return;
+  input.value='';
+  addBubble('me',text);
+  let userContent=text;
+  if(!docsAttached){
+    const blocks=[];
+    ['birthcert','medrec'].forEach(k=>{
+      const d=docs[k];
+      if(d){
+        if(d.kind==='document') blocks.push({type:'document',source:{type:'base64',media_type:d.media_type,data:d.data}});
+        else blocks.push({type:'image',source:{type:'base64',media_type:d.media_type,data:d.data}});
+      }
+    });
+    if(blocks.length){ userContent=[...blocks,{type:'text',text:text}]; docsAttached=true; }
+  }
+  history.push({role:'user',content:userContent});
+  showTyping();
+
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens:1000,
+        system:systemPrompt(),
+        messages:history
+      })
+    });
+    const data=await res.json();
+    hideTyping();
+    const reply=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim()
+      || "Sorry, I didn't quite catch that — could you try again?";
+    addBubble('ai',reply);
+    history.push({role:'assistant',content:reply});
+  }catch(err){
+    hideTyping();
+    addBubble('sys','⚠️ Couldn’t reach PawPal right now. This chat needs to run inside Claude to connect. Try again in a moment.');
+  }
+}
+
+/* populate the healthcare tab on first load */
+renderVets();
+</script>
+</body>
+</html>
